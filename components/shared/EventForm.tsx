@@ -27,25 +27,30 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useUploadThing } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation"
-import { createEvent } from "@/lib/actions/event.actions"
+import { createEvent, updateEvent } from "@/lib/actions/event.actions"
+import { IEvent } from "@/lib/database/models/event.model"
 
 
 
 type EventFormProps = {
   userId: string,
-  type: 'Create' | 'Update' // here single pipe "|" means union of values not "or" in a typical sense
+  type: 'Create' | 'Update', // here single pipe "|" means union of values not "or" in a typical sense
+  event?: IEvent,
+  eventId?: string
 }
 
 
 
 /* main function */
-const EventForm = ({ userId, type }: EventFormProps) => {
+const EventForm = ({ userId, type, event, eventId }: EventFormProps) => {
   // Default values
-  const initialValues = eventDefaultValues;
+  const initialValues = event && type === "Update"? 
+  {...event, startDateTime: new Date(event.startDateTime), endDateTime: new Date(event.endDateTime) }
+  : eventDefaultValues;
   const [files, setFiles] = useState<File[]>([])
   const router = useRouter();
 
-  const {startUpload} = useUploadThing('imageUploader')
+  const { startUpload } = useUploadThing('imageUploader')
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof eventFormSchema>>({
@@ -60,22 +65,40 @@ const EventForm = ({ userId, type }: EventFormProps) => {
     let uploadedImageUrl = values.imageUrl;
     if (files.length > 0) {
       const uploadImages = await startUpload(files);
-      if (!uploadImages){
+      if (!uploadImages) {
         return
       }
       uploadedImageUrl = uploadImages[0].url
     }
-    if (type === 'Create')
-    {
+    if (type === 'Create') {
       try {
         const newEvent = await createEvent({
-          event: {...values, imageUrl: uploadedImageUrl},
+          event: { ...values, imageUrl: uploadedImageUrl },
           userId,
           path: '/profile'
         });
         if (newEvent) {
           form.reset();
-          router.push(`/evnts/${newEvent._id}`)
+          router.push(`/events/${newEvent._id}`)
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    else if (type === 'Update') {
+      if (!eventId) {
+        router.back();
+        return;
+      }
+      try {
+        const updatedEvent = await updateEvent({
+          userId,
+          event: {...values, imageUrl: uploadedImageUrl, _id: eventId},
+          path: `/events/${eventId}`
+        });
+        if (updatedEvent) {
+          form.reset();
+          router.push(`/events/${updatedEvent._id}`)
         }
       } catch (error) {
         console.log(error);
@@ -253,9 +276,9 @@ const EventForm = ({ userId, type }: EventFormProps) => {
                                 Free Ticket
                               </label>
                               <Checkbox
-                              onCheckedChange={field.onChange}
-                              checked={field.value}
-                              id="isFree" className="mr-2 h-5 w-5 border-2 border-primary-500" />
+                                onCheckedChange={field.onChange}
+                                checked={field.value}
+                                id="isFree" className="mr-2 h-5 w-5 border-2 border-primary-500" />
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -293,12 +316,12 @@ const EventForm = ({ userId, type }: EventFormProps) => {
         </div>
 
         <Button type="submit"
-        size="lg"
-        disabled= {form.formState.isSubmitting}
-        className="button col-span-2 w-full"
+          size="lg"
+          disabled={form.formState.isSubmitting}
+          className="button col-span-2 w-full"
         >{
-          form.formState.isSubmitting? ('Submitting...') : (`${type} Event`)
-        }</Button>
+            form.formState.isSubmitting ? ('Submitting...') : (`${type} Event`)
+          }</Button>
       </form>
     </Form>
   )
