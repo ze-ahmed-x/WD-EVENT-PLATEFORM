@@ -41,10 +41,10 @@ export const checkoutOrder = async (order: CheckoutOrderParams) => {
     }
 }
 
-export const createOrder = (order: CreateOrderParams) => {
+export const createOrder = async (order: CreateOrderParams) => {
     try {
-        connectToDatabase();
-        const newOrder = Order.create({
+        await connectToDatabase();
+        const newOrder = await Order.create({
             ...order, event: order.eventId, buyer: order.buyerId
         });
         if (!newOrder) throw new Error('Could not create order');
