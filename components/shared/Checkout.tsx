@@ -28,7 +28,6 @@ const Checkout = ({ event, userId }: { event: IEvent, userId: string }) => {
       isFree: event.isFree,
       buyerId: userId
     }
-
     await checkoutOrder(order);
   }
 

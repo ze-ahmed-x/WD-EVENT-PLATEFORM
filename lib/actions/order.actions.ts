@@ -11,6 +11,7 @@ import {ObjectId} from 'mongodb';
 import User from '../database/models/user.model';
 
 export const checkoutOrder = async (order: CheckoutOrderParams) => {
+
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
   const price = order.isFree ? 0 : Number(order.price) * 100;
@@ -64,7 +65,7 @@ export const createOrder = async (order: CreateOrderParams) => {
 export async function getOrdersByEvent({ searchString, eventId }: GetOrdersByEventParams) {
   try {
     await connectToDatabase()
-
+    console.log("Event ID: " +eventId);
     if (!eventId) throw new Error('Event ID is required')
     const eventObjectId = new ObjectId(eventId)
 
@@ -112,7 +113,7 @@ export async function getOrdersByEvent({ searchString, eventId }: GetOrdersByEve
 
     return JSON.parse(JSON.stringify(orders))
   } catch (error) {
-    handleError(error)
+    handleError(error);
   }
 }
 
@@ -143,6 +144,6 @@ export async function getOrdersByUser({ userId, limit = 3, page }: GetOrdersByUs
 
     return { data: JSON.parse(JSON.stringify(orders)), totalPages: Math.ceil(ordersCount / limit) }
   } catch (error) {
-    handleError(error)
+    handleError(error);
   }
 }

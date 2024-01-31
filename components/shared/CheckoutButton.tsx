@@ -8,8 +8,9 @@ import Checkout from './Checkout';
 
 const CheckoutButton = ({event} : {event: IEvent}) => {
     const hasEventFinished = new Date(event.endDateTime) < new Date();
-    const { user } = useUser();
-    const userId = user?.publicMetadata.userId as string; // yes we could have done it using auth() as well but its a client component so we could go this way as well
+    const { isSignedIn, user } = useUser();
+    const userId = user?.publicMetadata.user_id as string; // auth() can be used only in server components
+    console.log(userId);
   return (
     <div className='flex items-center gap-3'>
         {/* Disable buying past events */}

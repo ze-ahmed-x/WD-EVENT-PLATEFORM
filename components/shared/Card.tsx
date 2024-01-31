@@ -67,7 +67,7 @@ function Card(
               {event.organizer.firstName} {event.organizer.lastName}
             </p>
             {hasOrderLink && (
-              <Link href={`/orders?eventid`}
+              <Link href={`/orders?eventId=${event._id}`}
               className="flex gap-2 hover:bg-grey-50">
                 <p className="text-primary-500">
                   Order Details
